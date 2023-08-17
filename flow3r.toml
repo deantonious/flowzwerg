@@ -9,3 +9,5 @@ class = "FlowZwerg"
 author = "deantonious"
 license = "MIT"
 url = "https://github.com/deantonious/flow3rzwerg"
+description = "Your trusted CCCamp gnome data on your badge!"
+version = 2
