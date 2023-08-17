@@ -1,0 +1,11 @@
+[app]
+name = "FlowZwerg"
+menu = "Apps"
+
+[entry]
+class = "FlowZwerg"
+
+[metadata]
+author = "deantonious"
+license = "MIT"
+url = "https://github.com/deantonious/flow3rzwerg"
