@@ -17,10 +17,10 @@ class FlowZwerg(Application):
         self.sound_pressure = 0
         self.dew_point = 0
         self.round_decimals = 0
+        self.gnome_data = {}
 
         self.last_update = 0
         self.load_status = 0
-        self.gnomes = ['Bashful', 'Doc', 'Dopey', 'Grumpy', 'Happy', 'Hefty', 'Kinky', 'Nerdy', 'Sleepy', 'Sneezy']
         self.current_gnome = 0
 
         self.wlan = network.WLAN(network.STA_IF)
@@ -37,33 +37,36 @@ class FlowZwerg(Application):
         ctx.save()
         ctx.move_to(0, -80).rgb(255, 255, 255).text('GnomeData')
         ctx.font_size = 24
-        ctx.move_to(0, -50).rgb(255, 255, 255).text(self.gnomes[self.current_gnome])
+        ctx.move_to(0, -50).rgb(255, 255, 255).text(str(self.gnomes_list[self.current_gnome]).upper())
         ctx.font_size = 16
         ctx.save()
-        '''
-        ctx.move_to(0, -16).rgb(255, 255, 255).text(f'Temperature: {self.temperature} °C')
-        ctx.move_to(0, 0).rgb(255, 255, 255).text(f'Humidity: {self.humidity} %')
-        ctx.move_to(0, 16).rgb(255, 255, 255).text(f'Presure: {self.air_preassure} mbar')
-        ctx.move_to(0, 32).rgb(255, 255, 255).text(f'UV Index: {self.uv_index}')
-        ctx.move_to(0, 48).rgb(255, 255, 255).text(f'Sound Presure: {self.sound_pressure} dB')
-        ctx.move_to(0, 70).rgb(255, 255, 255).text(f'Last Update: {self.last_update} ms')
-        '''
+
         if self.load_status == 1:
             ctx.move_to(0, 100).rgb(255, 255, 255).text('o')
-        ctx.image('/flash/sys/apps/flow3rzwerg/temperature.png', -100, -35, 48, 48)
-        ctx.move_to(-75, 25).rgb(255, 255, 255).text(f'{self.temperature} °C')
-        ctx.image('/flash/sys/apps/flow3rzwerg/humidity.png', -50, -35, 48, 48)
-        ctx.move_to(-25, 25).rgb(255, 255, 255).text(f'{self.humidity} %')
-        ctx.image('/flash/sys/apps/flow3rzwerg/sound_pressure.png', 0, -35, 48, 48)
-        ctx.move_to(25, 25).rgb(255, 255, 255).text(f'{self.sound_pressure} dB')
-        ctx.image('/flash/sys/apps/flow3rzwerg/uv_index.png', 50, -35, 48, 48)
-        ctx.move_to(75, 25).rgb(255, 255, 255).text(f'{self.uv_index}')
 
+        ctx.image('/flash/sys/apps/flowzwerg/temperature.png', -100, -35, 48, 48)
+        temperature = self.gnome_data[self.gnomes_list[self.current_gnome]]['temperature']
+        ctx.move_to(-75, 25).rgb(255, 255, 255).text(f'{temperature} °C')
 
-        ctx.image('/flash/sys/apps/flow3rzwerg/air_pressure.png', -50, 35, 48, 48)
-        ctx.move_to(-10, 95).rgb(255, 255, 255).text(f'{self.air_preassure}\nmbar')
-        ctx.image('/flash/sys/apps/flow3rzwerg/dew_point.png', 0, 35, 48, 48)
-        ctx.move_to(20, 95).rgb(255, 255, 255).text(f'{self.dew_point}')
+        ctx.image('/flash/sys/apps/flowzwerg/humidity.png', -50, -35, 48, 48)
+        humidity = self.gnome_data[self.gnomes_list[self.current_gnome]]['humidity']
+        ctx.move_to(-25, 25).rgb(255, 255, 255).text(f'{humidity} %')
+        
+        ctx.image('/flash/sys/apps/flowzwerg/sound_pressure.png', 0, -35, 48, 48)
+        sound_pressure = self.gnome_data[self.gnomes_list[self.current_gnome]]['sound_pressure']
+        ctx.move_to(25, 25).rgb(255, 255, 255).text(f'{sound_pressure} dB')
+
+        ctx.image('/flash/sys/apps/flowzwerg/uv_index.png', 50, -35, 48, 48)
+        uv_index = self.gnome_data[self.gnomes_list[self.current_gnome]]['uv_index']
+        ctx.move_to(75, 25).rgb(255, 255, 255).text(f'{uv_index}')
+
+        ctx.image('/flash/sys/apps/flowzwerg/air_pressure.png', -50, 35, 48, 48)
+        air_preassure = self.gnome_data[self.gnomes_list[self.current_gnome]]['air_preassure']
+        ctx.move_to(-10, 95).rgb(255, 255, 255).text(f'{air_preassure}\nmbar')
+
+        ctx.image('/flash/sys/apps/flowzwerg/dew_point.png', 0, 35, 48, 48)
+        dew_point = self.gnome_data[self.gnomes_list[self.current_gnome]]['dew_point']
+        ctx.move_to(20, 95).rgb(255, 255, 255).text(f'{dew_point}')
 
         #ctx.move_to(0, 70).rgb(255, 255, 255).text(f'{self.last_update} ms')
         ctx.restore()
@@ -72,10 +75,9 @@ class FlowZwerg(Application):
         super().think(ins, delta_ms)
 
         self.last_update += delta_ms
-        if (self.last_update / 1000) > 10:
-            
-            self.update_data()
+        if (self.last_update / 1000) > 60 * 5:
             self.last_update = 0
+            self.update_data()
 
         direction = ins.buttons.app
 
@@ -85,19 +87,19 @@ class FlowZwerg(Application):
         if direction == ins.buttons.NOT_PRESSED and self.button_status == 1:
             self.current_gnome += 1
             if self.current_gnome <= 0: 
-                self.current_gnome = len(self.gnomes)-1
-            if self.current_gnome > len(self.gnomes)-1: 
+                self.current_gnome = len(self.gnomes_list)-1
+            if self.current_gnome > len(self.gnomes_list)-1: 
                 self.current_gnome = 0
 
             self.button_status = 0
-            self.update_data()
             self.last_update = 0
+        
 
     def update_data(self) -> None:
         
         self.load_status = 1
         self.check_connection()
-        query = f'from(bucket:"datagnome") |> range(start:-30m) |> filter(fn:(r) => r.device == "{self.gnomes[self.current_gnome].lower()}") |> last() |> drop(columns: ["_start", "_stop", "_time", "_field"])'
+        query = f'from(bucket:"datagnome") |> range(start:-12h) |> last() |> drop(columns: ["_start", "_stop", "_time", "_field"])'
         headers = {
             'Accept': 'application/csv', 
             'Authorization': 'Bearer 5amv72PFZxPmnbUISjntEVxtElDYMhkeofg9Deo1ykO6Zy2XIba_iWPcyxyAp_R0dHsvHm5moE4YBCwxGIEriw==', 
@@ -110,23 +112,28 @@ class FlowZwerg(Application):
             rows = res.text.rstrip().split('\n')
             rows.pop(0)
             for row in rows:
-                values = row.split(',')
+                values = row.rstrip().split(',')
+                if values[5] not in self.gnome_data:
+                    self.gnome_data[values[5]] = {}
                 if values[4] is 'temperature':
-                    self.temperature = round(float(values[3]))
+                    self.gnome_data[values[5]]['temperature'] = round(float(values[3]))
                 elif values[4] is 'humidity':
-                    self.humidity = round(float(values[3]))
+                    self.gnome_data[values[5]]['humidity'] = round(float(values[3]))
                 elif values[4] is 'pressure':
-                    self.air_preassure = round(float(values[3]))
+                    self.gnome_data[values[5]]['air_preassure'] = round(float(values[3]))
                 elif values[4] is 'uv_index':
-                    self.uv_index = int(values[3])
+                    self.gnome_data[values[5]]['uv_index'] = int(values[3])
                 elif values[4] is 'sound_pressure':
-                    self.sound_pressure = round(float(values[3]))
+                    self.gnome_data[values[5]]['sound_pressure'] = round(float(values[3]))
                 elif values[4] is 'dew_point':
-                    self.dew_point = round(float(values[3]))
+                    self.gnome_data[values[5]]['dew_point'] = round(float(values[3]))
                 self.load_status = 0
         except:
             print('An exception occurred')
             self.load_status = -1
+        self.gnomes_list = list(self.gnome_data.keys())
+        print('Loaded gnomes: ', self.gnomes_list)
+        print('Loaded gnome data: ', self.gnome_data)
 
     def check_connection(self) -> None:
         if not self.wlan.isconnected():          
