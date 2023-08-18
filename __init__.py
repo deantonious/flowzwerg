@@ -4,6 +4,7 @@ from ctx import Context
 import st3m.run
 import network
 import urequests as requests
+import uos
 
 class FlowZwerg(Application):
     
@@ -22,6 +23,11 @@ class FlowZwerg(Application):
         self.last_update = 0
         self.load_status = 0
         self.current_gnome = 0
+        
+        self.bundle_path = app_ctx.bundle_path
+        if self.bundle_path is None or self.bundle_path is '':
+            self.bundle_path = "/flash/sys/apps/deantonious-flowzwerg"
+        print(self.bundle_path)
 
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
@@ -44,27 +50,27 @@ class FlowZwerg(Application):
         if self.load_status == 1:
             ctx.move_to(0, 100).rgb(255, 255, 255).text('o')
 
-        ctx.image('/flash/sys/apps/flowzwerg/temperature.png', -100, -35, 48, 48)
+        ctx.image(f'{self.bundle_path}/temperature.png', -100, -35, 48, 48)
         temperature = self.gnome_data[self.gnomes_list[self.current_gnome]]['temperature']
         ctx.move_to(-75, 25).rgb(255, 255, 255).text(f'{temperature} °C')
 
-        ctx.image('/flash/sys/apps/flowzwerg/humidity.png', -50, -35, 48, 48)
+        ctx.image(f'{self.bundle_path}/humidity.png', -50, -35, 48, 48)
         humidity = self.gnome_data[self.gnomes_list[self.current_gnome]]['humidity']
         ctx.move_to(-25, 25).rgb(255, 255, 255).text(f'{humidity} %')
         
-        ctx.image('/flash/sys/apps/flowzwerg/sound_pressure.png', 0, -35, 48, 48)
+        ctx.image(f'{self.bundle_path}/sound_pressure.png', 0, -35, 48, 48)
         sound_pressure = self.gnome_data[self.gnomes_list[self.current_gnome]]['sound_pressure']
         ctx.move_to(25, 25).rgb(255, 255, 255).text(f'{sound_pressure} dB')
 
-        ctx.image('/flash/sys/apps/flowzwerg/uv_index.png', 50, -35, 48, 48)
+        ctx.image(f'{self.bundle_path}/uv_index.png', 50, -35, 48, 48)
         uv_index = self.gnome_data[self.gnomes_list[self.current_gnome]]['uv_index']
         ctx.move_to(75, 25).rgb(255, 255, 255).text(f'{uv_index}')
 
-        ctx.image('/flash/sys/apps/flowzwerg/air_pressure.png', -50, 35, 48, 48)
+        ctx.image(f'{self.bundle_path}/air_pressure.png', -50, 35, 48, 48)
         air_preassure = self.gnome_data[self.gnomes_list[self.current_gnome]]['air_preassure']
         ctx.move_to(-10, 95).rgb(255, 255, 255).text(f'{air_preassure}\nmbar')
 
-        ctx.image('/flash/sys/apps/flowzwerg/dew_point.png', 0, 35, 48, 48)
+        ctx.image(f'{self.bundle_path}/dew_point.png', 0, 35, 48, 48)
         dew_point = self.gnome_data[self.gnomes_list[self.current_gnome]]['dew_point']
         ctx.move_to(20, 95).rgb(255, 255, 255).text(f'{dew_point}')
 
