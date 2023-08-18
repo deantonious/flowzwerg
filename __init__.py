@@ -23,15 +23,11 @@ class FlowZwerg(Application):
         self.last_update = 0
         self.load_status = 0
         self.current_gnome = 0
+        self.connected = False
         
         self.bundle_path = app_ctx.bundle_path
         if self.bundle_path is None or self.bundle_path is '':
-            self.bundle_path = "/flash/sys/apps/deantonious-flowzwerg"
-        print(self.bundle_path)
-
-        self.wlan = network.WLAN(network.STA_IF)
-        self.wlan.active(True)
-        self.check_connection()
+            self.bundle_path = '/flash/sys/apps/deantonious-flowzwerg'
         self.update_data()
 
     def draw(self, ctx: Context) -> None:
@@ -74,11 +70,14 @@ class FlowZwerg(Application):
         dew_point = self.gnome_data[self.gnomes_list[self.current_gnome]]['dew_point']
         ctx.move_to(20, 95).rgb(255, 255, 255).text(f'{dew_point}')
 
-        #ctx.move_to(0, 70).rgb(255, 255, 255).text(f'{self.last_update} ms')
         ctx.restore()
 
     def think(self, ins: InputState, delta_ms: int) -> None:
         super().think(ins, delta_ms)
+        
+        self.connected = network.WLAN(network.STA_IF).isconnected()
+        if not self.connected:
+            return
 
         self.last_update += delta_ms
         if (self.last_update / 1000) > 60 * 5:
@@ -104,7 +103,6 @@ class FlowZwerg(Application):
     def update_data(self) -> None:
         
         self.load_status = 1
-        self.check_connection()
         query = f'from(bucket:"datagnome") |> range(start:-12h) |> last() |> drop(columns: ["_start", "_stop", "_time", "_field"])'
         headers = {
             'Accept': 'application/csv', 
@@ -140,16 +138,6 @@ class FlowZwerg(Application):
         self.gnomes_list = list(self.gnome_data.keys())
         print('Loaded gnomes: ', self.gnomes_list)
         print('Loaded gnome data: ', self.gnome_data)
-
-    def check_connection(self) -> None:
-        if not self.wlan.isconnected():          
-            print('Connecting fo WiFi')
-            self.wlan.connect('Camp2023-open')
-            
-            while not self.wlan.isconnected():
-                pass
-            print('Network connected: ', self.wlan.ifconfig())
-
 
 if __name__ == '__main__':
     st3m.run.run_view(FlowZwerg(ApplicationContext()))
